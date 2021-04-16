@@ -122,50 +122,6 @@ def getLRList(module, w0, w1):
     return lis
 
 
-"""Cassava Leaf
-
-Image classes:
-
-0. Healthy plants + plants with disease 1
-1. Healthy plants + plants with  disease 2
-...
-4. Healthy plants
-
-
-Final feature vector:
-
-0: has features of disease 1 ?
-1: has features of disease 2 ?
-...
-
-
-Maybe like this..?
-
-0: [100, 0, 0, .., 100]     # since there are parts of a healthy plant as well
-1: [0, 100, 0, .., 100]
-...
-4: [0, 0, 0, .., 100]
-
-.. linear combination of feature parts should give a mix of healthy & diseased plants
-
-or: USE THIS
-
-0: [100, 0, 0, 0]           # no feature corresponding to healthy
-4: [0, 0, 0, 0]             # no disease features present
-
-TODO: 
-
-- try annealing schedulers..?  worth it?
-- once training works, move this circus to huawei's training cluster
-- data augmentation & data stratification?
-- hacking/preprocessing the images? how..?
-- run this via notebook..?  at colab? https://stackoverflow.com/questions/48905127/importing-py-files-in-google-colab?noredirect=1&lq=1
-
-=> routemap: via notebook (so that progressbars etc work) => via docker => in google colab
-(cleanup validation progressbar)
-
-"""
-
 class ModuleWrap:
     """A wrapper for this PyTorch model for easy deployment
     """
@@ -209,7 +165,19 @@ class ModuleWrap:
         return self.classnames[i]
 
     def __call__(self, img):
-        """input: normal rgb image (h, w, c)
+        """Apply necessary image transformations
+        
+        ::
+
+            input: numpy image (h, w, c)
+            => do necessary transformations, add batch dimension
+            => tensor with (batch, c, h, w)
+            => feed to neural net
+            => transform output to whatever you want
+
+        In this particular example case:
+
+        input: normal rgb image (h, w, c)
 
         output: top five classes
         """
@@ -248,6 +216,27 @@ class ModuleWrap:
             # print(">", res)
 
         return res
+
+
+"""Detector classes that use a certain pth file saved into the directory "data/"
+"""
+class Detector1(ModuleWrap):
+    """This detector class uses "model_1.pth" that is in the "data/" directory
+
+    In order to have it in the package, remember to graft the data/ directory
+    in MANIFEST.in
+
+    You can use your neural net detector like this:
+
+    ::
+
+        from my_torch_project.model import Detector1
+        detector = Detector1()
+        res = detector(img)
+
+    """
+    def __init__(self, use_gpu = False):
+        super().__init__(pth_file = getDataFile("model_1.pth"), use_gpu = use_gpu)
 
 
 def process_cl_args():

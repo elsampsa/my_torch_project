@@ -26,7 +26,8 @@ find . -name "*.py" -exec sed -i -r "s/my_torch_project/$name/g" {} \;
 # ./compile.bash # we can compile documentation only after this module is on the pythonpath!
 cd ..
 # decouple from git
-rm -rf .git .gitignore
+# rm -rf .git .gitignore
+rm -rf .git
 
 if [ "$#" -eq 2 ]; then
     echo "Initializing to namespace "$1"."$2

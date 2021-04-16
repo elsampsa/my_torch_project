@@ -1,24 +1,39 @@
 
 # My Torch Project
 
-*mainly for my own use - poorly documented*
+*mainly for my own use - documentation not that great*
 
-Features:
+## Features
 
 - Training your model
 - Packaging your model
-- Training & interference through notebooks as well
+- Training & interference *also* through notebooks
+- ..and *also* via docker
 
 Discover yourself.  :)
 
-Use ```reinit.bash``` to reinit this scaffold to your needs.
+## Usage
 
+- Use ```reinit.bash``` to reinit this scaffold to your needs
+- Install locally in development mode with ```pip3 install --user -e .```
+- Dummy-test inference with ```python3 model.py```
+
+You can use ``make.bash`` to create a python package with the .pth neural net weights baked in.
+
+After installing, using your trained model is as neat as this:
+```
+from my_torch_project.model import Detector1
+detector = Detector1()
+res = detector(img)
+```
+
+## Files
 ```
 your_project/
     model.py        : define your model here
                       define also a module wrapper for
                       weight loading and transformations
-                      (say, for numerical values to labels, etc.)
+                      (say, for numerical values => labels, etc.)
 
     datamodel.py    : define data transformations, say:
                       tensor <=> image
@@ -44,7 +59,7 @@ data/
                       (for example, the final weights)
 ```
 
-# Copyright & License
+## Copyright & License
 
 (c) 2021 Sampsa Riikonen 
 

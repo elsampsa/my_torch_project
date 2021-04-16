@@ -13,39 +13,63 @@ I = numpy.asarray(PIL.Image.open('test.jpg'))
 im = PIL.Image.fromarray(numpy.uint8(I))
 """
 
-pil_image_preprocess = T.Compose([  # requires PIL.Image
-    T.Resize(256), 
-    T.CenterCrop(224), 
-    T.ToTensor(), 
+pil_image_preprocess = T.Compose([  # requires PIL.Image or numpy array
+    T.Resize((256,256)),
+    # T.CenterCrop(224),
+    T.ToTensor(),
     T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-def image2Tensor(img):
+def image2Tensor(img): # , size = 256):
     """RGB (h, w, c) image to pytorch tensor (b, c, h, w)
 
     img must be of uint8 type
     """
-    pil_img = Image.fromarray(img)
-    # img = resize(img, input_image_size)
-    # t = torch.from_numpy(img).type(torch.FloatTensor)
-    # t = t.permute(2, 0, 1) # => (c, h, w)
-    # t = tensor_preprocess(t) # accepts PIL.Image or a tensor image
-    t = pil_image_preprocess(pil_img)
-    # t = t.unsqueeze(0) # add batch dimension => (b, c, h, w) # this is done by the loader..?
-    # print(">", t.shape)
+    # pil_img = Image.fromarray(img)
+    t = T.Compose([
+        # T.Resize((size, size)),
+        T.ToTensor(),
+        # T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) # depends..
+    ])(img) #(pil_img)
     return t
 
 
-def tensor2Image(t):
+def mask2Tensor(img): # , size = 256):
+    """RGB (h, w, 1) image to pytorch tensor (b, 1, h, w)
+
+    img must be of uint8 type
+    """
+    # pil_img = Image.fromarray(img)
+    t = T.Compose([
+        # T.Resize((size, size)),
+        T.ToTensor()
+    ])(img)
+    return t
+
+
+def tensor2Image(t, sizetup=None):
     """Pytorch tensor (b, c, h, w) to RGB (h, w, c) image
+
+    sizetup: (ysize, xsize)
     """
     t = t.squeeze(0) # => (c, h, w)
     t = t.permute(1, 2, 0) # => (h, w, c)
     img = t.numpy()
     # print(">", img.min())
-    img = img - img.min()
-    img = (img / img.max()) * 255.
-    return img.astype(np.uint8)
+    #img = img - img.min()
+    img = (img / (img.max() - img.min())) * 255.
+    img = img.astype(np.uint8)
+    """
+    return T.Compose([
+        T.Resize((ysize, xsize))
+    ])(img)
+    """
+    if sizetup is None:
+        return img
+    else:
+        ysize = sizetup[0]
+        xsize = sizetup[1]
+        return cv2.resize(img, (xsize, ysize))
 
 
 """key differences to keras' "Sequence" subclassing:
@@ -124,3 +148,71 @@ class CustomDataset(Dataset):
         y = torch.tensor(classnum)
         # print(">dataset returning", x.shape, y.shape)
         return x, y
+
+
+class UNetDataset(Dataset):
+    """Read files from a directory "dirname"
+
+
+    ::
+
+        dirname/
+            images/      
+                000000.png
+                000001.png
+                ...
+
+            masks/
+                000000.png
+                000001.png
+                ...
+    """
+
+    def __init__(self, dirname, n_max = None):
+        # self.x, self.y = x_set, y_set
+        assert os.path.exists(dirname), "that directory does not exist"
+
+        self.dirname=dirname
+
+        self.imgdir = os.path.join(self.dirname, 'images')
+        self.maskdir = os.path.join(self.dirname, 'masks')
+
+        assert os.path.exists(self.imgdir), "no images directory"
+        assert os.path.exists(self.maskdir), "no masks directory"
+        
+        lis = glob.glob(os.path.join(self.imgdir,'*.png'))
+        lis.sort()
+        lis2 = glob.glob(os.path.join(self.maskdir,'*.png'))
+        lis2.sort()
+
+        self.cache = []
+        cc = 0
+        for imgpath in lis:
+            #sti = imgpath.split(os.path.sep)[-1].split(".")[0] # "/path/to/000200.png" => "000200"
+            #num = int(sti) # "000200" => 200
+            maskpath = lis2[cc]
+            self.cache.append((imgpath, maskpath))
+            cc += 1
+            if (n_max is not None) and (cc >= n_max):
+                break
+
+
+    def __len__(self):
+        return len(self.cache)
+
+
+    def __getitem__(self, idx):
+        """idx: batch index
+        """
+        imgpath, maskpath = self.cache[idx]
+
+        img = imread(imgpath)
+        mask = RGB2bin(imread(maskpath))
+        # mask = np.expand_dims(mask, axis=2) # add third dimension
+        # print(">", img.shape)
+        # print(">", mask.shape)
+        
+        t_img = image2Tensor(img)
+        t_mask = mask2Tensor(mask)
+
+        return t_img, t_mask

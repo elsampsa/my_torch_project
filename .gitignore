@@ -1,1 +1,6 @@
 __pycache__/
+/train/generate/images/*.png
+/train/generate/masks/*.png
+/train/runs/*
+/train/checkpoints/*.pth
+.ipynb_checkpoints/
