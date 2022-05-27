@@ -7,10 +7,8 @@
 
 - Training your model
 - Packaging your model
-- Training & interference *also* through notebooks
-- ..and *also* via docker
-
-Discover yourself.  :)
+- Training & interference through notebooks
+- A [docker image](docker/) is included
 
 ## Usage
 
@@ -58,6 +56,10 @@ data/
                     : any persistent data for distribution with this module
                       (for example, the final weights)
 ```
+
+## Extras
+
+Like cool hardware & want to try external gpu for training?  Please see [egpu.md](egpu.md).
 
 ## Copyright & License
 
