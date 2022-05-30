@@ -8,23 +8,45 @@ This also makes it possible to upgrade your GPU capabilities.
 
 ## Graphics driver set-up
 
-Check that ```uname -r``` gives you
+Nvidia driver + opengl + cuda come all bundled within a certain driver version.
+
+You might try your luck in [nvidia's repo](https://developer.nvidia.com/cuda-downloads), but
+it is actually a better idea to use the driver version coming from canonical's repos, so try this:
 ```
-5.3.0-40-generic
+sudo apt-cache search nvidia-driver-*
 ```
-
-Then, while using that kernel, type:
+say you'll get:
 ```
-sudo apt-get purge nvidia-*
+...
+nvidia-driver-510
+...
 ```
-
-Next, load cuda + nivida driver + opengl + etc. package from Nvidia's pages [here](https://developer.nvidia.com/cuda-downloads)
-
-It's maybe a good idea not to use the latest release candidate, but a legacy version instead, so go to "Legacy Releases".
-
-Therein, just follow the instructions.
-
-Finally, reboot your computer & cross your fingers.
+Then check it's source with:
+```
+apt-cache policy nvidia-driver-510
+```
+If you want to use the default nvidia driver coming with your distro's default repos, 
+then be sure to remove any trace of nvidia's repos.  Easiest way is to remove these file:
+```
+/etc/apt/preferences.d/cuda-repository-pin-600
+/etc/apt/sources.list.d/cuda-ubuntu2004-*
+```
+Once you have done
+```
+sudo apt-get install nvidia-driver-510
+```
+continue with
+```
+sudo modprobe nvidia
+```
+Cuda as per canonical's repo, can be installed with:
+```
+sudo apt install nvidia-cuda-toolkit
+```
+For developers:
+```
+sudo apt install nvidia-cuda-dev
+```
 
 ## Install thunderbold admin tools
 
@@ -54,6 +76,12 @@ After that, you should be able to see the two gpus with
 ```
 nvidia-smi
 ```
+
+You might need to run
+```
+sudo modprobe nvidia
+```
+before that
 
 ## Nvidia package installations, cuda etc.
 
@@ -88,7 +116,7 @@ apt list --installed | grep "nvidia"
 
 ## Headbang
 
-If ``nvidia-smi`` gives you "couldn't communicate with the nvidia driver".  Your nvidia driver is not installed / loaded properly.
+If ``nvidia-smi`` gives you "couldn't communicate with the nvidia driver".  Your nvidia driver is not installed / loaded properly (remember to try ``sudo modprobe nvidia`` first).
 
 Check out these:
 
